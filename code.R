@@ -45,18 +45,28 @@ ggplot(x, aes(x=PAINS, y=y))+
   geom_boxplot()+facet_wrap(~fp)+
   ylab('Tanimoto Similarity')+xlab("PAINS Status")+
   theme(strip.text.x = element_text(face='bold', size=10))
-
 dev.copy(png, 'sim-dist.png', 600, 200);dev.off()
 
 ## Are distributions for PAINS pass/fail different?
+wilcox.test(wehi, wehi.pass)
+wilcox.test(wehi.m, wehi.pass.m)
+wilcox.test(wehi.c, wehi.pass.c)
 
-## Lipinski Ro5 and max sim?
-wehi <- read.table('WEHI-RND-PASS.sml', as.is=TRUE, header=FALSE, comment='', sep=' ')
-wehi <- parse.smiles(wehi$V1)
-dn <- get.desc.names()
-dn <- dn[ grep('RuleOf', dn) ]
-desc.wehi <- eval.desc(wehi, dn)
-desc.metab <- eval.desc(mols, dn)
-plot(desc.wehi[,1], wehi.pass.c)
 
-## save.image('work.Rda')
+## NMTS vs drug likeness (generated using code from http://pubs.acs.org/doi/abs/10.1021/ci100202p
+ds.wehi <- read.table('ds-FAIL.txt', header=TRUE, as.is=TRUE, comment='', sep='\t')
+ds.wehi.pass <- read.table('ds-PASS.txt', header=TRUE, as.is=TRUE, comment='', sep='\t')
+x <- rbind(data.frame(fp='MACCS (166 bit)', NMTS=wehi.m, DrugScore=ds.wehi$DRUGS_SCORE, PAINS='PAINS Fail'),
+           data.frame(fp='MACCS (166 bit)', NMTS=wehi.pass.m, DrugScore=ds.wehi.pass$DRUGS_SCORE, PAINS='PAINS Pass'),
+           data.frame(fp='ECFP6 (1024 bit)', NMTS=wehi.c, DrugScore=ds.wehi$DRUGS_SCORE, PAINS='PAINS Fail'),
+           data.frame(fp='ECFP6 (1024 bit)', NMTS=wehi.pass.c, DrugScore=ds.wehi.pass$DRUGS_SCORE, PAINS='PAINS Pass'),
+           data.frame(fp='Path (1024 bit)', NMTS=wehi, DrugScore=ds.wehi$DRUGS_SCORE, PAINS='PAINS Fail'),
+           data.frame(fp='Path (1024 bit)', NMTS=wehi.pass, DrugScore=ds.wehi.pass$DRUGS_SCORE, PAINS='PAINS Pass')
+           )
+ggplot(x, aes(x=NMTS, y=DrugScore))+
+  geom_point(alpha=0.3)+
+  facet_grid(~ fp)+
+  theme(strip.text = element_text(face='bold'))
+dev.copy(png,  'nmts-vs-drugscore.png', 600, 200);dev.off()
+## what is the correlation between NMTS and the significance of the correlation?           
+by(x, x$fp, function(x) cor.test(x$NMTS, x$DrugScore))
