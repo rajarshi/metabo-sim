@@ -47,3 +47,16 @@ ggplot(x, aes(x=PAINS, y=y))+
   theme(strip.text.x = element_text(face='bold', size=10))
 
 dev.copy(png, 'sim-dist.png', 600, 200);dev.off()
+
+## Are distributions for PAINS pass/fail different?
+
+## Lipinski Ro5 and max sim?
+wehi <- read.table('WEHI-RND-PASS.sml', as.is=TRUE, header=FALSE, comment='', sep=' ')
+wehi <- parse.smiles(wehi$V1)
+dn <- get.desc.names()
+dn <- dn[ grep('RuleOf', dn) ]
+desc.wehi <- eval.desc(wehi, dn)
+desc.metab <- eval.desc(mols, dn)
+plot(desc.wehi[,1], wehi.pass.c)
+
+## save.image('work.Rda')
